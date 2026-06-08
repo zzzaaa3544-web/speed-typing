@@ -1,0 +1,83 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Speed Typing</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;background:#0f0f23;color:#fff;min-height:100vh;display:flex;justify-content:center;align-items:center}
+.ob{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:1000;display:flex;justify-content:center;align-items:center}.ob.hide{display:none}
+.oc{background:#1a1a3e;border-radius:20px;padding:40px;max-width:500px;width:90%;text-align:center}
+.oc h2{color:#feca57;font-size:28px;margin-bottom:8px}.oc .sub{color:#888;font-size:14px}
+.stps{margin:25px 0;text-align:left;display:flex;flex-direction:column;gap:18px}
+.st{display:flex;gap:14px;align-items:flex-start}.st .n{width:32px;height:32px;border-radius:50%;background:#feca57;color:#000;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.st h4{font-size:14px;margin-bottom:2px}.st p{font-size:12px;color:#888;line-height:1.5}
+.oc button{padding:14px 40px;border:none;border-radius:10px;background:#feca57;color:#000;font-size:16px;font-weight:700;cursor:pointer}
+.oc .sk{color:#555;font-size:12px;cursor:pointer;margin-top:12px;display:inline-block}
+.app{display:none;max-width:700px;width:100%;padding:20px;text-align:center}.app.show{display:block}
+h1{margin-bottom:5px}h1 span{background:linear-gradient(90deg,#feca57,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub2{color:#666;margin-bottom:20px;font-size:14px}
+.stats{display:flex;justify-content:center;gap:30px;margin-bottom:20px}
+.stats .stat{text-align:center}.stats .stat .val{font-size:32px;font-weight:700;color:#feca57}.stats .stat .lbl{font-size:12px;color:#666}
+.text-display{background:#1a1a3e;border-radius:16px;padding:25px;margin-bottom:20px;font-size:18px;line-height:1.8;text-align:left;font-family:Georgia,serif;min-height:100px}
+.text-display .correct{color:#00b894}.text-display .wrong{color:#ff6b6b;background:rgba(255,107,107,0.1)}.text-display .cursor{border-left:2px solid #feca57;animation:blink 1s infinite}.text-display .pending{color:#444}
+@keyframes blink{50%{border-color:transparent}}
+textarea{width:100%;height:100px;padding:15px;border:2px solid #333;border-radius:12px;background:#1a1a3e;color:#fff;font-size:16px;font-family:Georgia,serif;resize:none;line-height:1.7}
+textarea:focus{outline:none;border-color:#feca57}
+textarea:disabled{opacity:0.5}
+.btns{display:flex;justify-content:center;gap:10px;margin-top:15px}
+.btns button{padding:10px 24px;border:1px solid #333;border-radius:8px;background:#1a1a3e;color:#fff;cursor:pointer;font-size:13px}
+.btns button:hover{border-color:#feca57}
+.btns button.active{background:#feca57;color:#000;border-color:#feca57;font-weight:600}
+.result{display:none;padding:20px;background:#1a1a3e;border-radius:14px;margin-top:15px}
+.result h3{color:#feca57;margin-bottom:8px}
+.result p{color:#888;margin-bottom:10px}
+.result button{padding:12px 30px;border:none;border-radius:10px;background:#feca57;color:#000;font-weight:600;cursor:pointer}
+</style></head><body>
+<div class="ob" id="ob"><div class="oc">
+<h2>Speed Typing</h2><p class="sub">Type paragraphs as fast as you can</p>
+<div class="stps">
+<div class="st"><div class="n">1</div><div><h4>Read the Text</h4><p>A paragraph is displayed above. Read it carefully before you start typing.</p></div></div>
+<div class="st"><div class="n">2</div><div><h4>Type It Out</h4><p>Type in the textarea below. Green = correct, Red = mistake. Timer starts when you begin.</p></div></div>
+<div class="st"><div class="n">3</div><div><h4>See Your Results</h4><p>When finished, see your WPM, accuracy, and time. Try to beat your best score!</p></div></div>
+</div>
+<button onclick="start()">Start Typing</button>
+<div class="sk" onclick="start()">Skip</div>
+</div></div>
+<div class="app" id="app">
+<h1><span>Speed Typing</span></h1><p class="sub2">Type the paragraph as fast as you can</p>
+<div class="stats"><div class="stat"><div class="val" id="wpm">0</div><div class="lbl">WPM</div></div><div class="stat"><div class="val" id="acc">100%</div><div class="lbl">Accuracy</div></div><div class="stat"><div class="val" id="time">0.0s</div><div class="lbl">Time</div></div></div>
+<div class="text-display" id="display"></div>
+<textarea id="input" oninput="onType()" placeholder="Start typing here..."></textarea>
+<div class="btns"><button class="active" onclick="setDiff('easy',this)">Easy</button><button onclick="setDiff('medium',this)">Medium</button><button onclick="setDiff('hard',this)">Hard</button><button onclick="reset()">New Text</button></div>
+<div class="result" id="result"><h3>Results</h3><p id="resMsg"></p><button onclick="reset()">Try Again</button></div></div>
+<script>
+var texts={easy:"The sun was setting behind the mountains. The sky turned orange and pink. Birds flew home to their nests. A gentle breeze blew through the trees. It was a beautiful evening in the countryside.",
+medium:"Technology has transformed the way we live and work. From smartphones to artificial intelligence, innovation continues to shape our daily experiences. The digital revolution has connected people across the globe in ways previously unimaginable.",
+hard:"The fundamental challenge of software engineering lies not in writing code, but in managing complexity. As systems grow in scale and scope, the cognitive overhead of understanding their interactions increases exponentially, demanding rigorous architectural discipline and continuous refactoring."};
+var curText='',started=false,startTime,timer;
+function start(){document.getElementById('ob').classList.add('hide');document.getElementById('app').classList.add('show');localStorage.setItem('st_seen','1');reset()}
+if(localStorage.getItem('st_seen')){document.getElementById('ob').classList.add('hide');document.getElementById('app').classList.add('show')}
+function setDiff(d,btn){document.querySelectorAll('.btns button').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');curText=texts[d];reset()}
+function reset(){if(!curText)curText=texts.easy;started=false;clearInterval(timer);
+document.getElementById('input').value='';document.getElementById('input').disabled=false;
+document.getElementById('wpm').textContent='0';document.getElementById('acc').textContent='100%';document.getElementById('time').textContent='0.0s';
+document.getElementById('result').style.display='none';renderDisplay()}
+function renderDisplay(){
+var typed=document.getElementById('input').value;var h='';
+for(var i=0;i<curText.length;i++){
+if(i<typed.length)h+=typed[i]===curText[i]?'<span class="correct">'+curText[i]+'</span>':'<span class="wrong">'+curText[i]+'</span>';
+else if(i===typed.length)h+='<span class="cursor">'+curText[i]+'</span>';
+else h+='<span class="pending">'+curText[i]+'</span>'}
+document.getElementById('display').innerHTML=h;
+}
+function onType(){
+if(!started){started=true;startTime=Date.now();timer=setInterval(function(){var s=((Date.now()-startTime)/1000).toFixed(1);document.getElementById('time').textContent=s+'s'},100)}
+var typed=document.getElementById('input').value;renderDisplay();
+var errors=0;for(var i=0;i<typed.length;i++)if(typed[i]!==curText[i])errors++;
+var acc=Math.max(0,Math.round((typed.length-errors)/Math.max(typed.length,1)*100));
+document.getElementById('acc').textContent=acc+'%';
+var mins=(Date.now()-startTime)/60000;var words=typed.split(/\s+/).filter(function(w){return w}).length;
+document.getElementById('wpm').textContent=mins>0?Math.round(words/mins):0;
+if(typed.length>=curText.length){clearInterval(timer);document.getElementById('input').disabled=true;
+var finalTime=((Date.now()-startTime)/1000).toFixed(1);var finalWpm=Math.round(words/((Date.now()-startTime)/60000));
+document.getElementById('result').style.display='block';
+document.getElementById('resMsg').textContent='WPM: '+finalWpm+' | Accuracy: '+acc+'% | Time: '+finalTime+'s';
+document.getElementById('time').textContent=finalTime+'s'}
+}
+curText=texts.easy;renderDisplay();
+</script></body></html>
